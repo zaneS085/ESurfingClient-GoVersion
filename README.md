@@ -1,4 +1,4 @@
-# GDPortal
+# ESurfingClient-GoVersion
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Go Version](https://img.shields.io/badge/Go-1.26+-00ADD8.svg)](https://go.dev/)
@@ -168,3 +168,7 @@ Remove-Item Env:GDPORTAL_SAMPLE_DIR
 - 个人配置文件（`config.json`）、桌面本地启动脚本（`启动.bat`）、节点/会话运行时缓存（`portal_cache.txt`、`profile.txt`、`session.txt`）、抓包样本（`*.bin`、`*.pcap`）与发布包目录（`release/`）均已在 `.gitignore` 中排除。
 - 提交诊断信息到 Issue 前，请优先使用程序内置的 **一键复制 GitHub Issue 报告** 或 `-issue` 命令，勿粘贴未脱敏日志或个人配置。
 - 本项目基于 [MIT License](LICENSE) 开源，仅供网络协议研究与校园网用户合规自用。
+
+## 致谢
+感谢[Linux.do](https://linux.do)社区能支持本项目推广，非常感谢所有人的贡献和Stars还有Issues  
+同类支持多平台的优秀项目[BadGhost520/ESurfingClient-CVersion](https://github.com/BadGhost520/ESurfingClient-CVersion)
