@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GDPortal 校园网客户端</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <div class="workbench">
+    <!-- 左侧 VS Code Activity Bar (46px) -->
+    <nav class="activity-bar" aria-label="主导航">
+      <div class="activity-top">
+        <button class="act-btn active" data-view="connect" title="认证连接 (Ctrl+1)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 20h.01" />
+            <path d="M8.5 16.429a5 5 0 0 1 7 0" />
+            <path d="M5 12.859a10 10 0 0 1 14 0" />
+            <path d="M2 8.82a15 15 0 0 1 20 0" />
+          </svg>
+        </button>
+        <button class="act-btn" data-view="network" title="网卡与 TUN 绕过 (Ctrl+2)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="3" width="20" height="7" rx="1.5" />
+            <rect x="2" y="14" width="20" height="7" rx="1.5" />
+            <path d="M6 6.5h.01M10 6.5h.01M6 17.5h.01M10 17.5h.01" />
+          </svg>
+        </button>
+        <button class="act-btn" data-view="debug" title="诊断与 Issue 导出 (Ctrl+3)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M8 2l1.88 1.88M14.12 3.88L16 2" />
+            <path d="M9 7.13v-1a3.003 3.003 0 1 1 6 0v1" />
+            <path d="M12 20c-3.3 0-6-2.7-6-6v-3a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v3c0 3.3-2.7 6-6 6Z" />
+            <path d="M12 20v-9M6.53 9C4.6 8.8 3 7.1 3 5M6 13H2M3 21c0-2.1 1.7-3.9 3.8-4M20.97 5c0 2.1-1.6 3.8-3.5 4M22 13h-4M17.2 17c2.1.1 3.8 1.9 3.8 4" />
+          </svg>
+        </button>
+      </div>
+      <div class="activity-bottom">
+        <button class="act-btn" data-view="settings" title="设置 (Ctrl+4)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3" />
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z" />
+          </svg>
+        </button>
+      </div>
+    </nav>
+
+    <!-- 主工作区 + 底部日志抽屉 -->
+    <div class="main-area">
+      <!-- 视图 1: 认证连接 -->
+      <section class="view active" id="view-connect">
+        <header class="view-header">
+          <div class="view-title">
+            <span class="state-pill" id="conn-badge" data-state="disconnected">未连接</span>
+            <h1>天翼校园网认证</h1>
+          </div>
+          <div class="header-meta" id="header-bypass-pill">物理出口待检测</div>
+        </header>
+
+        <div class="view-scroll">
+          <div class="split-grid">
+            <!-- 左栏: 账号表单 -->
+            <div class="pane">
+              <div class="pane-title">账号凭据</div>
+              <form id="login-form" autocomplete="off">
+                <div class="field">
+                  <label for="inp-account">账号 (手机号 / 学号)</label>
+                  <div class="pwd-wrap">
+                    <input id="inp-account" type="password" placeholder="请输入校园网账号" spellcheck="false" />
+                    <button type="button" class="icon-btn" id="btn-toggle-account" title="显示/隐藏账号">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                    </button>
+                  </div>
+                </div>
+                <div class="field">
+                  <label for="inp-password">密码 <span class="label-hint" id="saved-pwd-hint"></span></label>
+                  <div class="pwd-wrap">
+                    <input id="inp-password" type="password" placeholder="输入密码" />
+                    <button type="button" class="icon-btn" id="btn-toggle-pwd" title="显示/隐藏密码">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                    </button>
+                  </div>
+                </div>
+
+                <div class="check-row">
+                  <label class="checkbox-label">
+                    <input id="chk-remember" type="checkbox" checked />
+                    <span>记住密码 (Windows DPAPI 加密存储)</span>
+                  </label>
+                  <label class="checkbox-label">
+                    <input id="chk-force" type="checkbox" />
+                    <span>强制重连 (-force)</span>
+                  </label>
+                </div>
+
+                <!-- 自动获取学校参数展示条 -->
+                <div class="auto-school-box">
+                  <div class="auto-school-head">
+                    <span>学校参数</span>
+                    <span class="tag-subtle" id="school-source-tag">自动获取</span>
+                  </div>
+                  <div class="auto-school-vals mono" id="auto-school-vals">将在检测认证时自动从各校网关获取</div>
+                </div>
+
+                <!-- 折叠高级参数覆盖 -->
+                <details class="advanced-box" id="advanced-details">
+                  <summary>高级参数覆盖 (通常留空即可，自动兼容广东各高校)</summary>
+                  <div class="advanced-inner">
+                    <label class="checkbox-label" style="margin-bottom: 8px;">
+                      <input id="chk-manual-school" type="checkbox" />
+                      <span>启用手动覆盖 (仅在自动识别异常时开启)</span>
+                    </label>
+                    <div class="three-col">
+                      <div class="field">
+                        <label for="inp-school">学校 ID</label>
+                        <input id="inp-school" type="text" placeholder="自动识别" disabled />
+                      </div>
+                      <div class="field">
+                        <label for="inp-domain">域名 Domain</label>
+                        <input id="inp-domain" type="text" placeholder="留空自动获取" disabled />
+                      </div>
+                      <div class="field">
+                        <label for="inp-area">区号 Area</label>
+                        <input id="inp-area" type="text" placeholder="留空自动获取" disabled />
+                      </div>
+                    </div>
+                  </div>
+                </details>
+
+                <div class="btn-row">
+                  <button type="submit" class="btn btn-primary" id="btn-connect">连接校园网</button>
+                  <button type="button" class="btn btn-secondary" id="btn-reconnect">强制重连</button>
+                  <button type="button" class="btn btn-danger" id="btn-disconnect" disabled>断开下线</button>
+                </div>
+              </form>
+
+              <div class="error-banner hidden" id="connect-error-box">
+                <div class="error-banner-text" id="connect-error-msg"></div>
+                <button type="button" class="btn btn-ghost btn-sm" id="btn-goto-issue">导出 Issue 报告</button>
+              </div>
+            </div>
+
+            <!-- 右栏: 实时遥测与阶段耗时 -->
+            <div class="pane">
+              <div class="pane-title">实时链路遥测</div>
+              <div class="kv-grid">
+                <div class="kv-item">
+                  <span class="kv-k">物理出口</span>
+                  <span class="kv-v mono" id="tel-nic">-</span>
+                </div>
+                <div class="kv-item">
+                  <span class="kv-k">内网 IP / AC IP</span>
+                  <span class="kv-v mono" id="tel-ips">-</span>
+                </div>
+                <div class="kv-item">
+                  <span class="kv-k">学校 / 域名 / 区号</span>
+                  <span class="kv-v mono" id="tel-school">-</span>
+                </div>
+                <div class="kv-item">
+                  <span class="kv-k">加密算法引擎</span>
+                  <span class="kv-v mono" id="tel-algo">-</span>
+                </div>
+                <div class="kv-item">
+                  <span class="kv-k">心跳地址 / 周期</span>
+                  <span class="kv-v mono" id="tel-keep">-</span>
+                </div>
+                <div class="kv-item">
+                  <span class="kv-k">保活计数 / 最近成功</span>
+                  <span class="kv-v mono" id="tel-hb">-</span>
+                </div>
+                <div class="kv-item kv-full">
+                  <span class="kv-k">代理与 TUN 策略</span>
+                  <span class="kv-v" id="tel-bypass">待检测</span>
+                </div>
+              </div>
+
+              <div class="timing-section">
+                <div class="timing-head">
+                  <span>阶段耗时分布</span>
+                  <span class="mono" id="tel-total-ms">-</span>
+                </div>
+                <div class="timing-bar" id="timing-bar">
+                  <span class="tb-seg tb-detect" id="tb-detect" style="width:0%"></span>
+                  <span class="tb-seg tb-config" id="tb-config" style="width:0%"></span>
+                  <span class="tb-seg tb-neg" id="tb-neg" style="width:0%"></span>
+                  <span class="tb-seg tb-ticket" id="tb-ticket" style="width:0%"></span>
+                  <span class="tb-seg tb-login" id="tb-login" style="width:0%"></span>
+                </div>
+                <div class="timing-legend mono" id="timing-legend">
+                  <span><i class="dot tb-detect"></i>探测 <b id="ms-detect">-</b></span>
+                  <span><i class="dot tb-config"></i>配置 <b id="ms-config">-</b></span>
+                  <span><i class="dot tb-neg"></i>协商 <b id="ms-neg">-</b></span>
+                  <span><i class="dot tb-ticket"></i>取票 <b id="ms-ticket">-</b></span>
+                  <span><i class="dot tb-login"></i>登录 <b id="ms-login">-</b></span>
+                </div>
+              </div>
+
+              <div class="hops-section" id="hops-section">
+                <div class="timing-head">
+                  <span>多跳重定向追踪</span>
+                  <span class="mono" id="hops-count">0 跳</span>
+                </div>
+                <div class="hops-list mono" id="hops-list">
+                  <div class="muted-empty">认证发起后将记录各校网关重定向轨迹</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 视图 2: 网卡与 TUN 代理绕过 -->
+      <section class="view" id="view-network">
+        <header class="view-header">
+          <div class="view-title">
+            <h1>网卡与 TUN 绕过监控</h1>
+          </div>
+          <div class="btn-row-compact">
+            <button type="button" class="btn btn-secondary btn-sm" id="btn-refresh-adapters">刷新网卡</button>
+            <button type="button" class="btn btn-primary btn-sm" id="btn-run-doctor">一键网络体检</button>
+          </div>
+        </header>
+
+        <div class="view-scroll">
+          <div class="pane proxy-summary" id="proxy-summary-bar">
+            正在读取网络与代理环境...
+          </div>
+
+          <div class="pane">
+            <div class="pane-title-row">
+              <span class="pane-title">网络接口与出口选择</span>
+              <button type="button" class="btn btn-ghost btn-sm" id="btn-pin-auto">恢复自动选择物理网卡</button>
+            </div>
+            <div class="table-wrap">
+              <table class="vsc-table">
+                <thead>
+                  <tr>
+                    <th>状态</th>
+                    <th>接口名称</th>
+                    <th>分类</th>
+                    <th>IPv4</th>
+                    <th>物理网关</th>
+                    <th>直连 DNS</th>
+                    <th>默认路由权重</th>
+                    <th>操作</th>
+                  </tr>
+                </thead>
+                <tbody id="adapters-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="pane">
+            <div class="pane-title-row">
+              <span class="pane-title">网络体检结果 (不干扰当前在线会话)</span>
+              <span class="mono header-meta" id="doctor-time">尚未运行</span>
+            </div>
+            <div id="doctor-list" class="doctor-list">
+              <div class="muted-empty">点击右上角“一键网络体检”，检测物理网卡直连、IP_UNICAST_IF 绕过 TUN、直连 DNS 防 Fake-IP 与省中心节点可达性。</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 视图 3: 诊断与 Issue -->
+      <section class="view" id="view-debug">
+        <header class="view-header">
+          <div class="view-title">
+            <h1>诊断日志与 Issue 报告</h1>
+          </div>
+          <div class="btn-row-compact">
+            <button type="button" class="btn btn-primary btn-sm" id="btn-copy-issue">一键复制 GitHub Issue 报告</button>
+            <button type="button" class="btn btn-secondary btn-sm" id="btn-export-md">导出 .md</button>
+            <button type="button" class="btn btn-secondary btn-sm" id="btn-export-json">导出 .json</button>
+            <button type="button" class="btn btn-ghost btn-sm" id="btn-clear-logs">清空</button>
+          </div>
+        </header>
+
+        <div class="debug-toolbar">
+          <div class="subtab-bar">
+            <button type="button" class="subtab active" data-subtab="logs">实时日志 (<span id="cnt-logs">0</span>)</button>
+            <button type="button" class="subtab" data-subtab="wires">脱敏抓包 (<span id="cnt-wires">0</span>)</button>
+            <button type="button" class="subtab" data-subtab="issue">Issue 预览 (零隐私泄露)</button>
+          </div>
+          <div class="filter-controls" id="log-filters">
+            <select id="sel-log-level">
+              <option value="ALL">全部级别</option>
+              <option value="INFO">INFO</option>
+              <option value="WARN">WARN</option>
+              <option value="ERROR">ERROR</option>
+            </select>
+            <input id="inp-log-search" type="text" placeholder="搜索日志关键字..." />
+            <label class="checkbox-label">
+              <input id="chk-debug-wire" type="checkbox" />
+              <span>详细抓包落盘</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="debug-body">
+          <div class="subpane active mono" id="subpane-logs"></div>
+          <div class="subpane" id="subpane-wires">
+            <div class="table-wrap">
+              <table class="vsc-table">
+                <thead>
+                  <tr>
+                    <th>时间</th>
+                    <th>接口 / URL</th>
+                    <th>HTTP</th>
+                    <th>Error-Code</th>
+                    <th>耗时</th>
+                    <th>包大小</th>
+                    <th>Server-Tag</th>
+                    <th>摘要 / 错误</th>
+                  </tr>
+                </thead>
+                <tbody id="wires-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+          <div class="subpane" id="subpane-issue">
+            <div class="issue-actions-inline">
+              <span>所有账号/手机号、密码、学校 ID / 域名 / 区号、MAC、内网/AC/Portal IP、Cookie、ticket、keyhex 均已彻底隐藏，可放心贴到 GitHub Issue：</span>
+              <button type="button" class="btn btn-secondary btn-sm" id="btn-regen-issue">刷新生成报告</button>
+            </div>
+            <pre class="issue-preview mono" id="issue-preview-text">点击“刷新生成报告”或“一键复制 GitHub Issue 报告”查看脱敏报告内容。</pre>
+          </div>
+        </div>
+      </section>
+
+      <!-- 视图 4: 设置 -->
+      <section class="view" id="view-settings">
+        <header class="view-header">
+          <div class="view-title">
+            <h1>客户端设置</h1>
+          </div>
+          <div class="header-meta mono" id="settings-meta-label">-</div>
+        </header>
+
+        <div class="view-scroll">
+          <div class="settings-list">
+            <div class="setting-row">
+              <div class="setting-info">
+                <div class="setting-name">外观主题 (Dark / Light / System)</div>
+                <div class="setting-desc">切换 VS Code Modern Dark 或 Light 配色，并同步更新 Windows 原生窗口标题栏深浅色</div>
+              </div>
+              <select id="set-theme">
+                <option value="dark">暗色 (VS Code Dark Modern)</option>
+                <option value="light">亮色 (VS Code Light Modern)</option>
+                <option value="system">跟随 Windows 系统</option>
+              </select>
+            </div>
+
+            <div class="setting-row">
+              <div class="setting-info">
+                <div class="setting-name">隐私保护模式 (防截图泄露)</div>
+                <div class="setting-desc">开启后默认隐藏界面中的账号/手机号、学校 ID、域名、区号与校园网/外网 IP，方便直接截图或录屏分享</div>
+              </div>
+              <label class="switch">
+                <input id="set-privacy-mode" type="checkbox" checked />
+                <span class="slider"></span>
+              </label>
+            </div>
+
+            <div class="setting-row">
+              <div class="setting-info">
+                <div class="setting-name">关闭窗口时最小化到系统托盘</div>
+                <div class="setting-desc">开启后点击右上角 × 会销毁 WebView2 渲染器仅保留轻量化认证核心驻留托盘（内存降至 ~12MB）</div>
+              </div>
+              <label class="switch">
+                <input id="set-close-tray" type="checkbox" checked />
+                <span class="slider"></span>
+              </label>
+            </div>
+
+            <div class="setting-row">
+              <div class="setting-info">
+                <div class="setting-name">启动客户端时自动连接校园网</div>
+                <div class="setting-desc">启动客户端（含静默自启动）后立即使用已加密保存的凭据发起检测与认证</div>
+              </div>
+              <label class="switch">
+                <input id="set-auto-connect" type="checkbox" />
+                <span class="slider"></span>
+              </label>
+            </div>
+
+            <div class="setting-row">
+              <div class="setting-info">
+                <div class="setting-name">开机自动启动 (静默驻留托盘)</div>
+                <div class="setting-desc">写入 HKCU Run 注册表启动项，以 --minimized 模式后台运行且不主动弹窗</div>
+              </div>
+              <label class="switch">
+                <input id="set-auto-start" type="checkbox" />
+                <span class="slider"></span>
+              </label>
+            </div>
+
+            <div class="setting-row">
+              <div class="setting-info">
+                <div class="setting-name">登录前查询 state.cgi 状态</div>
+                <div class="setting-desc">默认关闭以减少 ~30ms 登录耗时；部分老旧 AC 校网若要求可尝试开启</div>
+              </div>
+              <label class="switch">
+                <input id="set-query-state" type="checkbox" />
+                <span class="slider"></span>
+              </label>
+            </div>
+
+            <div class="setting-row">
+              <div class="setting-info">
+                <div class="setting-name">开启详细抓包与文件调试日志</div>
+                <div class="setting-desc">同步保存脱敏抓包与协议日志，方便在诊断页追踪疑难校园网问题</div>
+              </div>
+              <label class="switch">
+                <input id="set-debug-wire" type="checkbox" />
+                <span class="slider"></span>
+              </label>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 可折叠底部 VS Code 输出抽屉 -->
+      <aside class="output-drawer collapsed" id="output-drawer">
+        <div class="drawer-header">
+          <div class="drawer-tabs">
+            <span class="drawer-tab active">输出 (GDPortal Core)</span>
+          </div>
+          <div class="drawer-actions">
+            <button type="button" class="btn btn-ghost btn-xs" id="btn-drawer-copy-issue">复制 Issue</button>
+            <button type="button" class="btn btn-ghost btn-xs" id="btn-drawer-clear">清空</button>
+            <button type="button" class="btn btn-ghost btn-xs" id="btn-drawer-close" title="折叠面板">✕</button>
+          </div>
+        </div>
+        <div class="drawer-body mono" id="drawer-logs"></div>
+      </aside>
+    </div>
+  </div>
+
+  <!-- 底部 22px VS Code Status Bar -->
+  <footer class="status-bar">
+    <div class="sb-left">
+      <button type="button" class="sb-item sb-state" id="sb-state-btn" title="查看连接页面">
+        <span class="sb-dot" id="sb-dot"></span>
+        <span id="sb-state-text">未连接</span>
+      </button>
+      <button type="button" class="sb-item" id="sb-nic-btn" title="切换网卡视图">
+        <span id="sb-nic-text">出口: 自动物理网卡</span>
+      </button>
+      <span class="sb-item mono" id="sb-tun-badge" title="IP_UNICAST_IF 绕过状态">TUN 直连就绪</span>
+      <span class="sb-item mono" id="sb-timing-text"></span>
+    </div>
+    <div class="sb-right">
+      <span class="sb-item mono" id="sb-algo-text"></span>
+      <span class="sb-item mono" id="sb-hb-text"></span>
+      <button type="button" class="sb-item" id="sb-drawer-btn" title="展开/收起底部输出日志 (Ctrl+`)">日志</button>
+      <button type="button" class="sb-item" id="sb-privacy-btn" title="切换界面隐私保护遮罩（防止截图泄露手机号、学校、地区与 IP）">隐私保护: 开</button>
+      <button type="button" class="sb-item" id="sb-theme-btn" title="切换黑夜/白天主题">暗色</button>
+    </div>
+  </footer>
+
+  <div class="toast hidden" id="toast"></div>
+  <script src="/app.js"></script>
+</body>
+</html>

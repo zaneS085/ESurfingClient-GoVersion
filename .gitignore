@@ -1,0 +1,33 @@
+# Build artifacts and binaries
+*.exe
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+*.prof
+gdportal-desktop/core_*.gz
+release/
+
+# Local credentials, personal launchers, and runtime caches
+**/启动.bat
+**/portal_cache.txt
+**/profile.txt
+**/session.txt
+**/algo_cache/
+**/config.json
+**/*.log
+
+# Local packet captures and sample dumps
+*.bin
+*.pcap
+*.pcapng
+gdportal-lite/official_*.txt
+gdportal-lite/py_*ref.txt
+gdportal-lite/gen_in_test.txt
+
+# Editor and OS metadata
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
